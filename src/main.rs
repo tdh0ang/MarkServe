@@ -1,10 +1,20 @@
 use axum::{Router, response::Html, routing::get};
 use std::{fs::File, io::{Read, Write}};
 use pulldown_cmark::{Parser, Options};
-// use tower_http::services::ServeFile;
+use walkdir::WalkDir;
+
+
+fn print_dir() -> std::io::Result<()>{
+    for entry in WalkDir::new("notes/") {
+        println!("{}", entry?.path().display());
+    }
+    Ok(())
+}
 
 #[tokio::main]
 async fn main() -> std::io::Result<()>{
+
+    let _ = print_dir();
 
     /* pulldown_cmark base code */
     let mut markdown = File::open("notes/info.md")?;
@@ -20,10 +30,11 @@ async fn main() -> std::io::Result<()>{
     /* axum base code */
     let app = Router::new().route("/", get(Html(html_output)));
 
-    // let app = Router::new().route_service("/", ServeFile::new("notes/info.html"));
-
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    println!("[INFO] Server starting...");
     axum::serve(listener, app).await.unwrap();
 
     Ok(())
 }
+
+
